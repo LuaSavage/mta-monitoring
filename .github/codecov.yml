@@ -1,0 +1,6 @@
+# exclude generated mocks from coverage report
+ignore:
+  - "**/mocks"
+  - "**/*_mock.go"
+  - "docks/*.go"
+  - "**/*.pb.go"
