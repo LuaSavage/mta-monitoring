@@ -14,5 +14,3 @@ type Server struct {
     players int
     maxplayers int
 }
-
-//
