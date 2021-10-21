@@ -58,7 +58,7 @@ func (s Server) ReadSocketData(conn *net.UDPConn) {
 	buf := make([]byte, 1024) // буфер для чтения клиентских данных
 	for {
 
-		_, err := Write([]byte("s"))
+		_, err := conn.Write([]byte("s"))
 
 	    if err != nil {
 		    fmt.Println("Write eror ", err)
