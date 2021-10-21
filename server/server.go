@@ -66,13 +66,13 @@ func (s Server) ReadSocketData(conn *net.UDPConn) {
 	    }
 
 	    _, _, err := conn.ReadFromUDP(buf) // читаем из сокета
-	    
+
 	    if err != nil {
 		    fmt.Println("ReadFromUDP eror ", err)
 		    return
 	    }
 
-	    fmt.Println( string(buf[:]))
+	    fmt.Println( string(buf))
 	}
 }
 
