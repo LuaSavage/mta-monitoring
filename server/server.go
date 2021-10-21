@@ -58,13 +58,20 @@ func (s Server) ReadSocketData(conn *net.UDPConn) {
 	buf := make([]byte, 1024) // буфер для чтения клиентских данных
 	for {
 
-	      readLen, _, err := conn.ReadFromUDP(buf) // читаем из сокета
-	      if err != nil {
-		      fmt.Println("ReadFromUDP eror ", err)
-		      return
-	      }
+		_, err := Write([]byte("s"))
 
-	      fmt.Println(readLen)
+	    if err != nil {
+		    fmt.Println("Write eror ", err)
+		    return
+	    }
+
+	    readLen, _, err := conn.ReadFromUDP(buf) // читаем из сокета
+	    if err != nil {
+		    fmt.Println("ReadFromUDP eror ", err)
+		    return
+	    }
+
+	    fmt.Println(readLen)
 	}
 }
 
