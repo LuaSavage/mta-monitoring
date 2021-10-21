@@ -31,7 +31,7 @@ func (s Server) Connect (){
 	updAddr, err := net.ResolveUDPAddr("udp", string(s.address)+":"+string(s.asePort))
 
 	//listener, err := net.ListenUDP("udp", &updAddr)
-	conn, err := net.DialUDP("udp", nil, &updAddr)
+	conn, err := net.DialUDP("udp", nil, *updAddr)
 
 	if err != nil {
 		fmt.Println(err)
