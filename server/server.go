@@ -59,10 +59,10 @@ func (s Server) ReadSocketData(conn *net.UDPConn) {
 
 	      readLen, _, err := conn.ReadFromUDP(buf) // читаем из сокета
 	      if err != nil {
-		      fmt.Println(err)
+		      fmt.Println("ReadFromUDP eror ", err)
 		      return
 	      }
-	      
+
 	      fmt.Println(readLen)
 	}
 }
