@@ -29,9 +29,6 @@ func NewServer(address string, port int) *Server {
 
 func (s Server) Connect (){
 
-	fmt.Println(" port ", s.asePort)
-	//updAddr :=net.UDPAddr{IP: net.ParseIP(s.address), Port: s.asePort }
-		fmt.Println(" full_adress ", string(s.address)+":"+strconv.Itoa(s.asePort))
 	updAddr, err := net.ResolveUDPAddr("udp", s.address+":"+strconv.Itoa(s.asePort))
 
 	if err != nil {
@@ -39,7 +36,6 @@ func (s Server) Connect (){
 		return
 	}
 
-	//listener, err := net.ListenUDP("udp", &updAddr)
 	conn, err := net.DialUDP("udp", nil, updAddr)
 
 	if err != nil {
@@ -47,11 +43,9 @@ func (s Server) Connect (){
 		return
 	}
 
-	fmt.Println(updAddr,conn)
-
 	for {
 
-		/*go*/ //s.ReadSocketData(conn)
+		go s.ReadSocketData(conn)
 	}
 
 }
@@ -68,8 +62,8 @@ func (s Server) ReadSocketData(conn *net.UDPConn) {
 		      fmt.Println(err)
 		      return
 	      }
+	      
 	      fmt.Println(readLen)
-
 	}
 }
 
