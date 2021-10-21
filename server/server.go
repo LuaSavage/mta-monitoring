@@ -71,7 +71,7 @@ func (s Server) ReadSocketData(conn *net.UDPConn) {
 		    return
 	    }
 
-	    fmt.Println(readLen)
+	    fmt.Println( string(buf[:]))
 	}
 }
 
