@@ -28,18 +28,19 @@ func NewServer(address string, port int) *Server {
 
 func (s Server) Connect (){
 	updAddr :=net.UDPAddr{IP: net.ParseIP(s.address), Port: s.asePort }
-	listener, err := net.ListenUDP("udp", &updAddr)
+	//listener, err := net.ListenUDP("udp", &updAddr)
+	conn, err := net.DialUDP("udp", nil, updAddr)
 
 	if err != nil {
-		      fmt.Println(err)
-		      return
+		fmt.Println(err)
+		return
 	}
 
 	fmt.Println(updAddr,listener)
 
 	for {
 
-		/*go*/ //s.ReadSocketData(listener)
+		/*go*/ //s.ReadSocketData(conn)
 	}
 
 }
