@@ -27,7 +27,9 @@ func NewServer(address string, port int) *Server {
 }
 
 func (s Server) Connect (){
-	updAddr :=net.UDPAddr{IP: net.ParseIP(s.address), Port: s.asePort }
+	//updAddr :=net.UDPAddr{IP: net.ParseIP(s.address), Port: s.asePort }
+	updAddr, err := net.ResolveUDPAddr("udp", string(s.address)+":"+string(s.asePort))
+
 	//listener, err := net.ListenUDP("udp", &updAddr)
 	conn, err := net.DialUDP("udp", nil, updAddr)
 
@@ -36,7 +38,7 @@ func (s Server) Connect (){
 		return
 	}
 
-	fmt.Println(updAddr,listener)
+	fmt.Println(updAddr,conn)
 
 	for {
 
