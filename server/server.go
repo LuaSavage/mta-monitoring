@@ -43,10 +43,10 @@ func (s Server) Connect (){
 		return
 	}
 
-	for {
+	/*for {
 
 		go s.ReadSocketData(conn)
-	}
+	}*/
 
 }
 
