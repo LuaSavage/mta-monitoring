@@ -51,7 +51,7 @@ func (s Server) Connect (){
 }
 
 func (s Server) ReadSocketData(conn *net.UDPConn) {
-	fmt.Println("test this shit \n", err)
+	fmt.Println("test this shit \n")
  	defer conn.Close() // закрываем сокет при выходе из функции
 
 
