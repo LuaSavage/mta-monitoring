@@ -42,7 +42,7 @@ func (s Server) Connect (){
 		fmt.Println("Could not establish UDP connection. \n", err)
 		return
 	}
-
+	fmt.Println(conn)
 	/*for {
 
 		go s.ReadSocketData(conn)
