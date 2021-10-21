@@ -30,11 +30,16 @@ func (s Server) Connect (){
 	//updAddr :=net.UDPAddr{IP: net.ParseIP(s.address), Port: s.asePort }
 	updAddr, err := net.ResolveUDPAddr("udp", string(s.address)+":"+string(s.asePort))
 
+	if err != nil {
+		fmt.Println(" ResolveUDPAddr failed", err)
+		return
+	}
+
 	//listener, err := net.ListenUDP("udp", &updAddr)
-	conn, err := net.DialUDP("udp", nil, *updAddr)
+	conn, err := net.DialUDP("udp", nil, updAddr)
 
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("Could not establish UDP connection. \n", err)
 		return
 	}
 
