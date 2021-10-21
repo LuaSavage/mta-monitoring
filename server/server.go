@@ -3,6 +3,7 @@ package server
 import (
    "fmt"
    "net"
+   "strconv"
 )
 
 type Server struct {
@@ -30,8 +31,8 @@ func (s Server) Connect (){
 
 	fmt.Println(" port ", s.asePort)
 	//updAddr :=net.UDPAddr{IP: net.ParseIP(s.address), Port: s.asePort }
-		fmt.Println(" full_adress ", string(s.address)+":"+string(s.asePort))
-	updAddr, err := net.ResolveUDPAddr("udp", string(s.address)+":"+string(s.asePort))
+		fmt.Println(" full_adress ", string(s.address)+":"+strconv.Itoa(s.asePort))
+	updAddr, err := net.ResolveUDPAddr("udp", s.address+":"+strconv.Itoa(s.asePort))
 
 	if err != nil {
 		fmt.Println(" ResolveUDPAddr failed", err)
