@@ -51,10 +51,11 @@ func (s Server) Connect (){
 }
 
 func (s Server) ReadSocketData(conn *net.UDPConn) {
+	fmt.Println("test this shit \n", err)
  	defer conn.Close() // закрываем сокет при выходе из функции
 
 
-	buf := make([]byte, 32) // буфер для чтения клиентских данных
+	buf := make([]byte, 1024) // буфер для чтения клиентских данных
 	for {
 
 	      readLen, _, err := conn.ReadFromUDP(buf) // читаем из сокета
