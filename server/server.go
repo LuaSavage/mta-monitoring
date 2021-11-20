@@ -5,33 +5,9 @@ import (
    "net"
    "strconv"
    "bytes"
-   /*"encoding/binary"*/
    "reflect"
 )
 
-var LENGTH_OF_INT int = 4
-var LENGTH_OF_SHORT int =  2
-var LENGTH_OF_CHAR int = 1
-/*
-var FLAGS map[string]int = map[string]int{
-    "ASE_PLAYER_COUNT": 0x0004,
-    "ASE_MAX_PLAYER_COUNT": 0x0008,
-    "ASE_GAME_NAME": 0x0010,
-    "ASE_SERVER_NAME": 0x0020,
-    "ASE_GAME_MODE": 0x0040,
-    "ASE_MAP_NAME": 0x0080,
-    "ASE_SERVER_VER": 0x0100,
-    "ASE_PASSWORDED": 0x0200,
-    "ASE_SERIALS": 0x0400,
-    "ASE_PLAYER_LIST": 0x0800,
-    "ASE_RESPONDING": 0x1000,
-    "ASE_RESTRICTION": 0x2000,
-    "ASE_SEARCH_IGNORE_SECTIONS": 0x4000,
-    "ASE_KEEP_FLAG": 0x8000,
-    "ASE_HTTP_PORT": 0x080000,
-    "ASE_SPECIAL": 0x100000,
-}
-*/
 type Server struct {
 	Timeout    float64
 	Game       string
