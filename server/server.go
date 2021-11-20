@@ -6,6 +6,7 @@ import (
    "strconv"
    "bytes"
    /*"encoding/binary"*/
+   "reflect"
 )
 
 var LENGTH_OF_INT int = 4
@@ -32,29 +33,29 @@ var FLAGS map[string]int = map[string]int{
 }
 */
 type Server struct {
-	timeout    float64
-	game       string
-	address	   string
-	port       int
-	asePort    int
-	name       string
-	gamemode   string
-	map_name   string
-	version    string
-	somewhat   string
-	players    int
-	maxplayers int
+	Timeout    float64
+	Game       string
+	Address	   string
+	Port       int
+	AsePort    int
+	Name       string
+	Gamemode   string
+	Map        string
+	Version    string
+	Somewhat   string
+	Players    int
+	Maxplayers int
 }
 
 func NewServer(address string, port int) *Server {
-	newServer:= Server{address: address, port: port, asePort: port + 123}
+	newServer:= Server{Address: address, Port: port, AsePort: port + 123}
 	newServer.Connect()
  	return &newServer
 }
 
 func (s Server) Connect (){
 
-	updAddr, err := net.ResolveUDPAddr("udp", s.address+":"+strconv.Itoa(s.asePort))
+	updAddr, err := net.ResolveUDPAddr("udp", s.Address+":"+strconv.Itoa(s.AsePort))
 
 	if err != nil {
 		fmt.Println(" ResolveUDPAddr failed", err)
@@ -76,7 +77,7 @@ func (s Server) Connect (){
 }
 
 func (s Server) ReadSocketData(conn *net.UDPConn) {
-	fmt.Println("test this shit \n")
+
  	defer conn.Close() // закрываем сокет при выходе из функции
 
 	buf := make([]byte, 1024) // буфер для чтения клиентских данных
@@ -106,70 +107,34 @@ func (s Server) ReadSocketData(conn *net.UDPConn) {
 func (s Server) ReadRow(buf *[]byte) {
 	buffer := bytes.NewBuffer(*buf)
 
-    //flags := buffer.Next(LENGTH_OF_INT)
-
-    state:=true
-
-    for state {
-
-    	buffer.Next(6)
-        // Length
-        //len := buffer.Next(LENGTH_OF_SHORT)
-
-        // Ip address
-
-		for i := 0; i < LENGTH_OF_INT; i++ {
-			mySlice:=buffer.Next(LENGTH_OF_CHAR)
-           	fmt.Println( int(mySlice[0]))
-		}
-
-		state = false
-
-        /*
-        ip_pieces.reverse()
-        server.ip = '.'.join(ip_pieces)
-
-        server.port = buffer.read(LENGTH_OF_SHORT)
+    params:= [9]string{"Game", "Port", "Name", "Gamemode", "Map", "Version", "Somewhat", "Players", "Maxplayers"}
  
-        if (flags & FLAGS["ASE_PLAYER_COUNT"]) != 0:
-            server.playersCount = buffer.read(LENGTH_OF_SHORT)
+    //reading begins from 4 byte
+    buffer.Next(4)
 
-        if (flags & FLAGS["ASE_MAX_PLAYER_COUNT"]) != 0:
-            server.maxPlayersCount = buffer.read(LENGTH_OF_SHORT)
-
-        if (flags & FLAGS["ASE_GAME_NAME"]) != 0:
-            server.gameName = buffer.readString()
-
-        if (flags & FLAGS["ASE_SERVER_NAME"]) != 0:
-            server.serverName = buffer.readString()
-
-        if (flags & FLAGS["ASE_GAME_MODE"]) != 0:
-            server.modeName = buffer.readString()
-
-        if (flags & FLAGS["ASE_MAP_NAME"]) != 0:
-            server.mapName = buffer.readString()
-
-        if (flags & FLAGS["ASE_SERVER_VER"]) != 0:
-            server.verName = buffer.readString()
-            
-        if (flags & FLAGS["ASE_PASSWORDED"]) != 0:
-            server.passworded = buffer.read(LENGTH_OF_CHAR)
-
-        if (flags & FLAGS["ASE_SERIALS"]) != 0:
-            server.serials = buffer.read(LENGTH_OF_CHAR)
-
-        if (flags & FLAGS["ASE_PLAYER_LIST"]) != 0:
-            listSize = buffer.read(LENGTH_OF_SHORT)
-
-            for i in range(listSize):
-                playerNick = buffer.readString()
-                server.players.append(playerNick)
-        
+    for i:=0; i<len(params); i++ {
+        length := int(buffer.Next(1)[0])-1
+        value := buffer.Next(length)
+        fmt.Println( string(value))    
 
 
-*/
+        fieldName:=params[i]
 
-    }
+        obj := reflect.Indirect(reflect.ValueOf(&s))
+        field:=obj.FieldByName(fieldName)
+        fmt.Println(field,fieldName)
+        if field.Type().Name() == "int"{
+            i, _ := strconv.Atoi(string(value))
+            field.SetInt(int64(i))
+        } 
+
+        if field.Type().Name() == "string"{
+            field.SetString(string(value))
+        }          
+
+    } 
+
+    fmt.Println(s)     
 }
 
 
