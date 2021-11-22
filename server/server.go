@@ -29,41 +29,40 @@ func NewServer(address string, port int) *Server {
  	return &newServer
 }
 
-func (s Server) Connect (){
+func (s *Server) Connect ()  *Server {
 
 	updAddr, err := net.ResolveUDPAddr("udp", s.Address+":"+strconv.Itoa(s.AsePort))
 
 	if err != nil {
-		fmt.Println(" ResolveUDPAddr failed", err)
-		return
+		fmt.Println("ResolveUDPAddr failed", err)
+		return s
 	}
 
 	conn, err := net.DialUDP("udp", nil, updAddr)
 
 	if err != nil {
-		fmt.Println("Could not establish UDP connection. \n", err)
-		return
+		fmt.Println("Couldn't establish UDP connection. \n", err)
+		return s
 	}
 
-	//for {
+	s.ReadSocketData(conn)
 
-		 s.ReadSocketData(conn)
-	//}
-
+    return s
 }
 
-func (s Server) ReadSocketData(conn *net.UDPConn) {
+func (s *Server) ReadSocketData(conn *net.UDPConn) *Server {
 
  	defer conn.Close() // закрываем сокет при выходе из функции
 
 	buf := make([]byte, 1024) // буфер для чтения клиентских данных
+
 	for {
 
 		_, err := conn.Write([]byte("s"))
 
 	    if err != nil {
 		    fmt.Println("Write eror ", err)
-		    return
+		    return s
 	    }
 
 	    readLen, _, err := conn.ReadFromUDP(buf) // читаем из сокета
@@ -71,16 +70,21 @@ func (s Server) ReadSocketData(conn *net.UDPConn) {
 	    if readLen > 0 {
 		    if err != nil {
 			    fmt.Println("ReadFromUDP eror ", err)
-			    return
+			    return s
 		    }
 
 		    s.ReadRow(&buf)
-		    //fmt.Println( string(buf))
+            break
 		}
+
 	}
+
+    return s
+
 }
 
-func (s Server) ReadRow(buf *[]byte) {
+func (s *Server) ReadRow(buf *[]byte) *Server {
+
 	buffer := bytes.NewBuffer(*buf)
 
     params:= [9]string{"Game", "Port", "Name", "Gamemode", "Map", "Version", "Somewhat", "Players", "Maxplayers"}
@@ -89,16 +93,15 @@ func (s Server) ReadRow(buf *[]byte) {
     buffer.Next(4)
 
     for i:=0; i<len(params); i++ {
+
         length := int(buffer.Next(1)[0])-1
         value := buffer.Next(length)
-        fmt.Println( string(value))    
-
 
         fieldName:=params[i]
 
-        obj := reflect.Indirect(reflect.ValueOf(&s))
+        obj := reflect.Indirect(reflect.ValueOf(s))
         field:=obj.FieldByName(fieldName)
-        fmt.Println(field,fieldName)
+
         if field.Type().Name() == "int"{
             i, _ := strconv.Atoi(string(value))
             field.SetInt(int64(i))
@@ -108,17 +111,14 @@ func (s Server) ReadRow(buf *[]byte) {
             field.SetString(string(value))
         }          
 
-    } 
+    }
 
-    fmt.Println(s)     
+    return s
 }
 
-
-/*
-// must be property
-func (s Server) get_join_link(address string) string{
-	return `mtasa://`+s.address+`:`+string(s.port)
+func (s Server) Get_join_link() string{
+    // return link to join mta sa server
+	return `mtasa://`+s.Address+`:`+string(s.Port)
 }
 
-*/
 
