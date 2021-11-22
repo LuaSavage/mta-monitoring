@@ -1,17 +1,17 @@
 package server
 
 import (
-   "fmt"
-   "net"
-   "strconv"
-   "bytes"
-   "reflect"
+	"bytes"
+	"fmt"
+	"net"
+	"reflect"
+	"strconv"
 )
 
 type Server struct {
 	Timeout    float64
 	Game       string
-	Address	   string
+	Address    string
 	Port       int
 	AsePort    int
 	Name       string
@@ -24,12 +24,12 @@ type Server struct {
 }
 
 func NewServer(address string, port int) *Server {
-	newServer:= Server{Address: address, Port: port, AsePort: port + 123}
+	newServer := Server{Address: address, Port: port, AsePort: port + 123}
 	newServer.Connect()
- 	return &newServer
+	return &newServer
 }
 
-func (s *Server) Connect ()  *Server {
+func (s *Server) Connect() *Server {
 
 	updAddr, err := net.ResolveUDPAddr("udp", s.Address+":"+strconv.Itoa(s.AsePort))
 
@@ -47,12 +47,12 @@ func (s *Server) Connect ()  *Server {
 
 	s.ReadSocketData(conn)
 
-    return s
+	return s
 }
 
 func (s *Server) ReadSocketData(conn *net.UDPConn) *Server {
 
- 	defer conn.Close() // закрываем сокет при выходе из функции
+	defer conn.Close() // закрываем сокет при выходе из функции
 
 	buf := make([]byte, 1024) // буфер для чтения клиентских данных
 
@@ -60,26 +60,26 @@ func (s *Server) ReadSocketData(conn *net.UDPConn) *Server {
 
 		_, err := conn.Write([]byte("s"))
 
-	    if err != nil {
-		    fmt.Println("Write eror ", err)
-		    return s
-	    }
+		if err != nil {
+			fmt.Println("Write eror ", err)
+			return s
+		}
 
-	    readLen, _, err := conn.ReadFromUDP(buf) // читаем из сокета
+		readLen, _, err := conn.ReadFromUDP(buf) // читаем из сокета
 
-	    if readLen > 0 {
-		    if err != nil {
-			    fmt.Println("ReadFromUDP eror ", err)
-			    return s
-		    }
+		if readLen > 0 {
+			if err != nil {
+				fmt.Println("ReadFromUDP eror ", err)
+				return s
+			}
 
-		    s.ReadRow(&buf)
-            break
+			s.ReadRow(&buf)
+			break
 		}
 
 	}
 
-    return s
+	return s
 
 }
 
@@ -87,38 +87,36 @@ func (s *Server) ReadRow(buf *[]byte) *Server {
 
 	buffer := bytes.NewBuffer(*buf)
 
-    params:= [9]string{"Game", "Port", "Name", "Gamemode", "Map", "Version", "Somewhat", "Players", "Maxplayers"}
- 
-    //reading begins from 4 byte
-    buffer.Next(4)
+	params := [9]string{"Game", "Port", "Name", "Gamemode", "Map", "Version", "Somewhat", "Players", "Maxplayers"}
 
-    for i:=0; i<len(params); i++ {
+	//reading begins from 4 byte
+	buffer.Next(4)
 
-        length := int(buffer.Next(1)[0])-1
-        value := buffer.Next(length)
+	for i := 0; i < len(params); i++ {
 
-        fieldName:=params[i]
+		length := int(buffer.Next(1)[0]) - 1
+		value := buffer.Next(length)
 
-        obj := reflect.Indirect(reflect.ValueOf(s))
-        field:=obj.FieldByName(fieldName)
+		fieldName := params[i]
 
-        if field.Type().Name() == "int"{
-            i, _ := strconv.Atoi(string(value))
-            field.SetInt(int64(i))
-        } 
+		obj := reflect.Indirect(reflect.ValueOf(s))
+		field := obj.FieldByName(fieldName)
 
-        if field.Type().Name() == "string"{
-            field.SetString(string(value))
-        }          
+		if field.Type().Name() == "int" {
+			i, _ := strconv.Atoi(string(value))
+			field.SetInt(int64(i))
+		}
 
-    }
+		if field.Type().Name() == "string" {
+			field.SetString(string(value))
+		}
 
-    return s
+	}
+
+	return s
 }
 
-func (s Server) Get_join_link() string{
-    // return link to join mta sa server
-	return `mtasa://`+s.Address+`:`+string(s.Port)
+func (s Server) Get_join_link() string {
+	// return link to join mta sa server
+	return `mtasa://` + s.Address + `:` + string(s.Port)
 }
-
-
