@@ -12,10 +12,10 @@ import (
 )
 
 func main() {
-  // pass server address and port
+  	// pass server address and port
 	newServer :=server.NewServer("217.106.106.107", 22044)
   
-  // print link to foin mta sa server
+  	// print link to foin mta sa server
 	fmt.Println(newServer.Get_join_link())
 }
 ```
