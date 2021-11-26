@@ -1,6 +1,6 @@
 # MTA Server Monitoring
 
-Light weighted solution for MTA Server monitoring from ASE port.
+Light weighted solution for MTA Server monitoring from ASE port.  
 A.S.E means All Seeing Eye and actually its udp port
 
 This library is adoptation of https://github.com/Lipau3n/mtasa-monitoring to golang
