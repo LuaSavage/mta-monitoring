@@ -111,12 +111,14 @@ func (s *Server) ReadRow(buf *[]byte) *Server {
 			field.SetString(string(value))
 		}
 
+		fmt.Println("passed", fieldName)
+
 	}
 
 	return s
 }
 
-func (s Server) Get_join_link() string {
+func (s Server) GetJoinLink() string {
 	// return link to join mta sa server
 	return `mtasa://` + s.Address + `:` + string(s.Port)
 }
