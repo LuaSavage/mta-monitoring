@@ -120,5 +120,5 @@ func (s *Server) ReadRow(buf *[]byte) *Server {
 
 func (s Server) GetJoinLink() string {
 	// return link to join mta sa server
-	return `mtasa://` + s.Address + `:` + string(s.Port)
+	return `mtasa://` + s.Address + `:` + strconv.Itoa(s.Port)
 }
