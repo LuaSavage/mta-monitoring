@@ -24,33 +24,46 @@ type Server struct {
 }
 
 func NewServer(address string, port int) *Server {
-	newServer := Server{Address: address, Port: port, AsePort: port + 123}
-	newServer.Connect()
+	newServer := Server{
+		Timeout:    0,
+		Game:       "",
+		Address:    address,
+		Port:       port,
+		AsePort:    port + 123,
+		Name:       "",
+		Gamemode:   "",
+		Map:        "",
+		Version:    "",
+		Somewhat:   "",
+		Players:    0,
+		Maxplayers: 0,
+	}
+	_, connection := newServer.Connect()
+	_, responseBuffer := newServer.ReadSocketData(connection)
+	newServer.ReadRow(responseBuffer)
 	return &newServer
 }
 
-func (s *Server) Connect() *Server {
+func (s *Server) Connect() (*Server, *net.UDPConn) {
 
 	updAddr, err := net.ResolveUDPAddr("udp", s.Address+":"+strconv.Itoa(s.AsePort))
 
 	if err != nil {
 		fmt.Println("ResolveUDPAddr failed", err)
-		return s
+		return s, nil
 	}
 
 	conn, err := net.DialUDP("udp", nil, updAddr)
 
 	if err != nil {
 		fmt.Println("Couldn't establish UDP connection. \n", err)
-		return s
+		return s, conn
 	}
 
-	s.ReadSocketData(conn)
-
-	return s
+	return s, conn
 }
 
-func (s *Server) ReadSocketData(conn *net.UDPConn) *Server {
+func (s *Server) ReadSocketData(conn *net.UDPConn) (*Server, *[]byte) {
 
 	defer conn.Close() // закрываем сокет при выходе из функции
 
@@ -62,7 +75,7 @@ func (s *Server) ReadSocketData(conn *net.UDPConn) *Server {
 
 		if err != nil {
 			fmt.Println("Write eror ", err)
-			return s
+			return s, &buf
 		}
 
 		readLen, _, err := conn.ReadFromUDP(buf) // читаем из сокета
@@ -70,16 +83,15 @@ func (s *Server) ReadSocketData(conn *net.UDPConn) *Server {
 		if readLen > 0 {
 			if err != nil {
 				fmt.Println("ReadFromUDP eror ", err)
-				return s
+				return s, &buf
 			}
 
-			s.ReadRow(&buf)
 			break
 		}
 
 	}
 
-	return s
+	return s, &buf
 
 }
 
@@ -92,14 +104,13 @@ func (s *Server) ReadRow(buf *[]byte) *Server {
 	//reading begins from 4 byte
 	buffer.Next(4)
 
+	obj := reflect.Indirect(reflect.ValueOf(s))
+
 	for i := 0; i < len(params); i++ {
 
 		length := int(buffer.Next(1)[0]) - 1
 		value := buffer.Next(length)
-
 		fieldName := params[i]
-
-		obj := reflect.Indirect(reflect.ValueOf(s))
 		field := obj.FieldByName(fieldName)
 
 		if field.Type().Name() == "int" {
@@ -110,8 +121,6 @@ func (s *Server) ReadRow(buf *[]byte) *Server {
 		if field.Type().Name() == "string" {
 			field.SetString(string(value))
 		}
-
-		fmt.Println("passed", fieldName)
 
 	}
 

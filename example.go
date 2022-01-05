@@ -8,6 +8,7 @@ import (
 )
 
 func main() {
+
 	newServer := server.NewServer("217.106.106.107", 22044)
 	spew.Dump(newServer)
 	fmt.Println(newServer.GetJoinLink())
