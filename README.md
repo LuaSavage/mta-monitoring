@@ -16,7 +16,7 @@ func main() {
 	newServer :=server.NewServer("217.106.106.107", 22044)
   
   	// print link to join mta sa server
-	fmt.Println(newServer.Get_join_link())
+	fmt.Println(newServer.GetJoinLink())
 }
 ```
 
