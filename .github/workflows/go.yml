@@ -1,13 +1,13 @@
 name: test
 on:   
   push:
-    branches: [ master ]
+    branches: [ main ]
     paths-ignore:
      - '**.md'
      #- '**.yml'
      - '**.yaml' 
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
     paths-ignore:
      - '**.md'
      #- '**.yml'
