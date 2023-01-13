@@ -33,7 +33,7 @@ type Server struct {
 }
 
 // Constructor of mta:sa server object.
-// Depends on mta:sa server adress and port.
+// Depends on mta:sa server address and port.
 func NewServer(address string, port int) (server *Server) {
 	server = &Server{
 		Address: address,
