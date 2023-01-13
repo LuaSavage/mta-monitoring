@@ -60,7 +60,7 @@ func TestReadSocketData(t *testing.T) {
 		return len(bytesOfTypicalResponse), nil, nil
 	}).Times(1)
 
-	newServer := NewServer( /* addres */ testIp /* port */, testPort)
+	newServer := NewServer( /* address */ testIp /* port */, testPort)
 	newServer.connection = mockUdpConn
 	recievedBytes, err := newServer.ReadSocketData()
 
@@ -72,7 +72,7 @@ func TestReadSocketData(t *testing.T) {
 func TestReadRow(t *testing.T) {
 	bytesOfTypicalResponse := GetTypicalBytes(t)
 
-	newServer := NewServer( /* addres */ testIp /* port */, testPort)
+	newServer := NewServer( /* address */ testIp /* port */, testPort)
 	newServer.ReadRow(&bytesOfTypicalResponse)
 
 	ValidateFields(t, newServer)
@@ -92,7 +92,7 @@ func TestUpdateOnce(t *testing.T) {
 
 	mockUdpConn.EXPECT().Close().Times(1).After(readingUdp)
 
-	newServer := NewServer( /* addres */ testIp /* port */, testPort)
+	newServer := NewServer( /* address */ testIp /* port */, testPort)
 	newServer.connection = mockUdpConn
 
 	err := newServer.UpdateOnce()
