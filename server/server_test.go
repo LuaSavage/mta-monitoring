@@ -2,6 +2,7 @@ package server
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"net"
 	"reflect"
@@ -99,6 +100,47 @@ func TestUpdateOnce(t *testing.T) {
 	assert.NoError(t, err)
 
 	ValidateFields(t, newServer)
+}
+
+func TestUpdateOnce_ErroOnWrite(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUdpConn := NewMockUDPconnection(mockCtrl)
+
+	connWriteErr := errors.New("smth wrong with connection write")
+	mockUdpConn.EXPECT().Write(gomock.AssignableToTypeOf([]byte("s"))).Return(1, connWriteErr)
+	mockUdpConn.EXPECT().Close().Times(1)
+
+	newServer := NewServer( /* address */ testIp /* port */, testPort)
+	newServer.connection = mockUdpConn
+
+	err := newServer.UpdateOnce()
+	assert.Error(t, err)
+
+}
+
+func TestUpdateOnce_ErrOnReadingUDP(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUdpConn := NewMockUDPconnection(mockCtrl)
+
+	udpReadingErr := errors.New("smth wrong with udp reading")
+	mockUdpConn.EXPECT().Write(gomock.AssignableToTypeOf([]byte("s"))).Return(1, nil)
+
+	bytesOfTypicalResponse := GetTypicalBytes(t)
+	readingUdp := mockUdpConn.EXPECT().ReadFromUDP(gomock.AssignableToTypeOf([]byte(""))).DoAndReturn(func(b []byte) (_ int, _ *net.UDPAddr, _ error) {
+		copy(b, bytesOfTypicalResponse)
+		return len(bytesOfTypicalResponse), nil, udpReadingErr
+	}).Times(1)
+
+	mockUdpConn.EXPECT().Close().Times(1).After(readingUdp)
+
+	newServer := NewServer( /* address */ testIp /* port */, testPort)
+	newServer.connection = mockUdpConn
+
+	err := newServer.UpdateOnce()
+	assert.Error(t, err)
+
 }
 
 func TestGetJoinLink(t *testing.T) {
