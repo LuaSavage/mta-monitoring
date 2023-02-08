@@ -1,3 +1,4 @@
+// Package server implements mta:sa server description object with ability to self update
 package server
 
 import (
@@ -8,14 +9,18 @@ import (
 	"strconv"
 )
 
-//go:generate mockgen -source ./server.go -destination=./udpconn_mock.go -package=server
+//go:generate mockgen -source ./server.go -destination=./../mock/udpconn_mock.go -package=mock
 type UDPconnection interface {
 	Write(b []byte) (n int, err error)
 	ReadFromUDP(b []byte) (int, *net.UDPAddr, error)
 	Close() error
 }
 
-// This is a server object
+/*
+ This is a server object.
+
+ All exported fields contains game server metadata
+*/
 type Server struct {
 	Timeout    float64
 	Game       string
@@ -34,6 +39,7 @@ type Server struct {
 
 // Constructor of mta:sa server object.
 // Depends on mta:sa server address and port.
+// The address and port are the same as what you may typed in the game browser address row
 func NewServer(address string, port int) (server *Server) {
 	server = &Server{
 		Address: address,
@@ -44,7 +50,7 @@ func NewServer(address string, port int) (server *Server) {
 	return
 }
 
-// It establishing udp connection to the server
+// It establishing udp connection to the game server
 func (s *Server) Connect() (conn *net.UDPConn, err error) {
 	updAddr, err := net.ResolveUDPAddr("udp", s.Address+":"+strconv.Itoa(s.AsePort))
 	if err != nil {
@@ -85,7 +91,7 @@ func (s *Server) ReadSocketData() (*[]byte, error) {
 	return &buf, nil
 }
 
-// Interpreting data from the buffer and applying it to the server object
+// Interpreting data from the buffer and applying it to the server object field by field
 func (s *Server) ReadRow(buf *[]byte) *Server {
 	buffer := bytes.NewBuffer(*buf)
 	params := [9]string{"Game", "Port", "Name", "Gamemode", "Map", "Version", "Somewhat", "Players", "Maxplayers"}
@@ -113,7 +119,7 @@ func (s *Server) ReadRow(buf *[]byte) *Server {
 	return s
 }
 
-// Establishing connection, reading data and wraps up
+// Establishing connection, reading, interpreting data and wraps up
 func (s *Server) UpdateOnce() (err error) {
 	if s.connection == nil {
 		if _, err = s.Connect(); err != nil {

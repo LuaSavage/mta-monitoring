@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"testing"
 
+	mock "github.com/LuaSavage/mta-monitoring/mock"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 )
@@ -50,7 +51,7 @@ func ValidateFields(t *testing.T, testServer *Server) {
 func TestReadSocketData(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
-	mockUdpConn := NewMockUDPconnection(mockCtrl)
+	mockUdpConn := mock.NewMockUDPconnection(mockCtrl)
 	mockUdpConn.EXPECT().Write(gomock.AssignableToTypeOf([]byte("s"))).Return(1, nil)
 
 	emptyByte := []byte("")
@@ -82,7 +83,7 @@ func TestReadRow(t *testing.T) {
 func TestUpdateOnce(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
-	mockUdpConn := NewMockUDPconnection(mockCtrl)
+	mockUdpConn := mock.NewMockUDPconnection(mockCtrl)
 	mockUdpConn.EXPECT().Write(gomock.AssignableToTypeOf([]byte("s"))).Return(1, nil)
 
 	bytesOfTypicalResponse := GetTypicalBytes(t)
@@ -105,7 +106,7 @@ func TestUpdateOnce(t *testing.T) {
 func TestUpdateOnce_ErroOnWrite(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
-	mockUdpConn := NewMockUDPconnection(mockCtrl)
+	mockUdpConn := mock.NewMockUDPconnection(mockCtrl)
 
 	connWriteErr := errors.New("smth wrong with connection write")
 	mockUdpConn.EXPECT().Write(gomock.AssignableToTypeOf([]byte("s"))).Return(1, connWriteErr)
@@ -122,7 +123,7 @@ func TestUpdateOnce_ErroOnWrite(t *testing.T) {
 func TestUpdateOnce_ErrOnReadingUDP(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
-	mockUdpConn := NewMockUDPconnection(mockCtrl)
+	mockUdpConn := mock.NewMockUDPconnection(mockCtrl)
 
 	udpReadingErr := errors.New("smth wrong with udp reading")
 	mockUdpConn.EXPECT().Write(gomock.AssignableToTypeOf([]byte("s"))).Return(1, nil)
