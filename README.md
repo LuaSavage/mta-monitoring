@@ -1,14 +1,23 @@
 ![test workflow](https://github.com/LuaSavage/mta-monitoring/actions/workflows/go.yml/badge.svg)
 [![Go Report Card](https://goreportcard.com/badge/github.com/LuaSavage/mta-monitoring)](https://goreportcard.com/report/github.com/LuaSavage/mta-monitoring)
+[![pkg.go.dev](https://pkg.go.dev/badge/github.com/LuaSavage/mta-monitoring)](https://pkg.go.dev/github.com/LuaSavage/mta-monitoring/server)
 [![codecov](https://codecov.io/gh/LuaSavage/mta-monitoring/branch/main/graph/badge.svg?token=FUPH9E2C38)](https://codecov.io/gh/LuaSavage/mta-monitoring)
 
 # MTA Server Monitoring
 
 Lightweight library for monitoring MTA:SA servers via the ASE (All-Seeing Eye) UDP port.
 
+Documentation: https://pkg.go.dev/github.com/LuaSavage/mta-monitoring/server
+
 Inspired by https://github.com/Lipau3n/mtasa-monitoring
 
 The library runtime uses only the Go standard library. Test dependencies are `testify` and `go.uber.org/mock`.
+
+## Installation
+
+```shell
+go get github.com/LuaSavage/mta-monitoring@v0.2.0
+```
 
 ## Getting started
 
@@ -40,7 +49,7 @@ func main() {
 ### Output
 
 ```shell
-&{Timeout:0 Game:mta Address:185.71.66.81 Port:22003 AsePort:22126 Name:Actual-server-name Gamemode:RPG Map:None Version:1.5n Somewhat:0 Players:280 Maxplayers:815}
+&{Timeout:0 Game:mta Address:185.71.66.81 Port:22003 AsePort:22126 Name:Actual-server-name Gamemode:RPG Map:None Version:1.5n Passworded:false Players:280 Maxplayers:815 PlayerList:[]}
 mtasa://185.71.66.81:22003
 ```
 
@@ -63,9 +72,10 @@ exampleServer.Timeout = 10
 * **Gamemode** — server mode
 * **Map** — current map
 * **Version** — MTA:SA server version
-* **Somewhat** — ASE passworded flag
+* **Passworded** — whether the server requires a password
 * **Players** — current player count
 * **Maxplayers** — maximum player slots
+* **PlayerList** — joined players with name, score, and ping
 
 ## Build
 

@@ -37,6 +37,8 @@ jobs:
         run: go build -o example-bin ./cmd/example
       - name: Test
         run: go test ./... -race -coverprofile=coverage.out -covermode=atomic
+      - name: Verify examples compile
+        run: go test -run '^Example' ./...
       - name: Codecov
         uses: codecov/codecov-action@v5
         with:

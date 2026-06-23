@@ -1,12 +1,10 @@
 package server
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"net"
 	"os"
-	"reflect"
 	"strconv"
 	"time"
 )
@@ -39,9 +37,10 @@ type Server struct {
 	Gamemode   string
 	Map        string
 	Version    string
-	Somewhat   string
+	Passworded bool
 	Players    int
 	Maxplayers int
+	PlayerList []Player
 	connection UDPconnection
 }
 
@@ -122,7 +121,8 @@ func (s *Server) ReadSocketData() (*[]byte, error) {
 		}
 
 		if readLen > 0 {
-			return &buf, nil
+			data := buf[:readLen]
+			return &data, nil
 		}
 	}
 
@@ -139,31 +139,14 @@ func isTimeoutError(err error) bool {
 }
 
 // ReadRow parses an ASE response buffer and applies the fields to the server.
-func (s *Server) ReadRow(buf *[]byte) *Server {
-	buffer := bytes.NewBuffer(*buf)
-	params := [9]string{"Game", "Port", "Name", "Gamemode", "Map", "Version", "Somewhat", "Players", "Maxplayers"}
-
-	// reading begins from 4 byte
-	buffer.Next(4)
-	obj := reflect.Indirect(reflect.ValueOf(s))
-
-	for i := 0; i < len(params); i++ {
-		length := int(buffer.Next(1)[0]) - 1
-		value := buffer.Next(length)
-		fieldName := params[i]
-		field := obj.FieldByName(fieldName)
-
-		if field.Type().Name() == "int" {
-			i, _ := strconv.Atoi(string(value))
-			field.SetInt(int64(i))
-		}
-
-		if field.Type().Name() == "string" {
-			field.SetString(string(value))
-		}
+func (s *Server) ReadRow(buf *[]byte) error {
+	parsed, err := parseASE(*buf)
+	if err != nil {
+		return err
 	}
 
-	return s
+	applyParsedASE(s, parsed)
+	return nil
 }
 
 // UpdateOnce connects if needed, queries ASE once, parses the response, and closes the connection.
@@ -184,8 +167,7 @@ func (s *Server) UpdateOnce() error {
 		return err
 	}
 
-	s.ReadRow(buff)
-	return nil
+	return s.ReadRow(buff)
 }
 
 // GetJoinLink returns the mtasa:// join link shown in the in-game browser.
