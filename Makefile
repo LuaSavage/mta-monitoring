@@ -1,5 +1,16 @@
+.PHONY: test vet generate build-example run-example
+
+test:
+	go test ./... -race
+
+vet:
+	go vet ./...
+
+generate:
+	go generate ./...
+
 build-example:
-	go build -o example-bin ./example/example.go
+	go build -o example-bin ./cmd/example
 
 run-example:
-	go run ./example/example.go
+	go run ./cmd/example

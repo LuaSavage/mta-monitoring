@@ -4,64 +4,92 @@
 
 # MTA Server Monitoring
 
-Lightweight solution for MTA Server monitoring from ASE port.  
-A.S.E means All Seeing Eye and actually it's UDP port
+Lightweight library for monitoring MTA:SA servers via the ASE (All-Seeing Eye) UDP port.
 
-Inspired by https://github.com/Lipau3n/mtasa-monitoring  
-Depends only on standard libraries.
+Inspired by https://github.com/Lipau3n/mtasa-monitoring
+
+The library runtime uses only the Go standard library. Test dependencies are `testify` and `go.uber.org/mock`.
 
 ## Getting started
+
 ### Example
+
 ```go
 package main
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/LuaSavage/mta-monitoring/server"
 )
 
 func main() {
-	// pass server address and port
 	exampleServer := server.NewServer("185.71.66.81", 22003)
 
-	// Note that it updating fields once.
-	// To update them frequently or on occasion you've to have some sort of poller
+	// UpdateOnce fetches ASE data once. Use a poller for periodic updates.
 	if err := exampleServer.UpdateOnce(); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
-	// Printing updated data in objects structure
 	fmt.Printf("%+v\n", exampleServer)
-
-	// Printing link to join mta:sa server
 	fmt.Println(exampleServer.GetJoinLink())
 }
 ```
+
 ### Output
+
 ```shell
-&{Timeout:0 Game:mta Address:185.71.66.81 Port:22003 AsePort:22126 Name:Actual-server-name Gamemode:RPG Map:None Version:1.5n Somewhat:0 Players:280 Maxplayers:815 connection:<nil>}
+&{Timeout:0 Game:mta Address:185.71.66.81 Port:22003 AsePort:22126 Name:Actual-server-name Gamemode:RPG Map:None Version:1.5n Somewhat:0 Players:280 Maxplayers:815}
 mtasa://185.71.66.81:22003
 ```
 
-### Server information
-* **Game** (mta)
-* **Address** string with MTA server ip address
-* **Port** - server main port (UDP)
-* **AsePort** - main MTA:SA port + 123
-* **Name** - server name
-* **Gamemode** - server mode
-* **Map** - server map
-* **Version** - mta:sa server version
-* **Players** - number of players on the server right now
-* **Maxplayers** - the maximum number of players that can join
+### Timeout
 
-## Build 
-You can modify example and then build it:
+Set `Server.Timeout` to the UDP read/write deadline in seconds. When zero, a 5 second default is used.
+
+```go
+exampleServer := server.NewServer("185.71.66.81", 22003)
+exampleServer.Timeout = 10
+```
+
+### Server information
+
+* **Game** — game identifier (`mta`)
+* **Address** — MTA server IP address
+* **Port** — main server port (UDP)
+* **AsePort** — ASE port (`main port + 123`)
+* **Name** — server name
+* **Gamemode** — server mode
+* **Map** — current map
+* **Version** — MTA:SA server version
+* **Somewhat** — ASE passworded flag
+* **Players** — current player count
+* **Maxplayers** — maximum player slots
+
+## Build
+
+Run tests:
+
+```shell
+make test
+```
+
+Regenerate mocks:
+
+```shell
+make generate
+```
+
+Build the example CLI:
+
 ```shell
 make build-example
 ```
-Or build and run simultaneously:
+
+Build and run the example (optional address and port arguments):
+
 ```shell
 make run-example
+go run ./cmd/example 185.71.66.81 22003
 ```

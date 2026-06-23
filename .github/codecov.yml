@@ -2,5 +2,5 @@
 ignore:
   - "**/mocks"
   - "**/*_mock.go"
-  - "docks/*.go"
+  - "docs/*.go"
   - "**/*.pb.go"

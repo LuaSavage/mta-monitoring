@@ -2,21 +2,34 @@ package server
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"net"
+	"os"
 	"reflect"
 	"strconv"
+	"time"
 )
 
-//go:generate mockgen -source ./server.go -destination=./udpconn_mock.go -package=server
+//go:generate go run go.uber.org/mock/mockgen@latest -source ./server.go -destination=./udpconn_mock.go -package=server
+
+const (
+	defaultTimeout   = 5 * time.Second
+	maxReadAttempts  = 3
+	aseQueryPayload  = "s"
+	aseResponseBufSz = 1024
+)
+
+// UDPconnection is the minimal UDP surface used for ASE queries and testing.
 type UDPconnection interface {
 	Write(b []byte) (n int, err error)
 	ReadFromUDP(b []byte) (int, *net.UDPAddr, error)
 	Close() error
 }
 
-// This is a server object
+// Server holds MTA:SA server connection settings and fields populated from an ASE response.
 type Server struct {
+	// Timeout is the UDP read/write deadline in seconds. Zero uses a 5 second default.
 	Timeout    float64
 	Game       string
 	Address    string
@@ -32,65 +45,105 @@ type Server struct {
 	connection UDPconnection
 }
 
-// Constructor of mta:sa server object.
-// Depends on mta:sa server address and port.
-func NewServer(address string, port int) (server *Server) {
-	server = &Server{
+// NewServer creates a Server for the given game address and main UDP port.
+// The ASE port is computed as port + 123.
+func NewServer(address string, port int) *Server {
+	return &Server{
 		Address: address,
 		Port:    port,
 		AsePort: port + 123,
 	}
-
-	return
 }
 
-// It establishing udp connection to the server
-func (s *Server) Connect() (conn *net.UDPConn, err error) {
-	updAddr, err := net.ResolveUDPAddr("udp", s.Address+":"+strconv.Itoa(s.AsePort))
-	if err != nil {
-		err = fmt.Errorf("resolve UDPAddr failed: %s", err)
-		return
+func (s *Server) timeout() time.Duration {
+	if s.Timeout == 0 {
+		return defaultTimeout
+	}
+	return time.Duration(s.Timeout * float64(time.Second))
+}
+
+func (s *Server) refreshDeadline() error {
+	conn, ok := s.connection.(*net.UDPConn)
+	if !ok {
+		return nil
 	}
 
-	conn, err = net.DialUDP("udp", nil, updAddr)
-	if err != nil {
-		err = fmt.Errorf("couldn't establish udp connection: %s", err)
-		return
+	deadline := time.Now().Add(s.timeout())
+	if err := conn.SetReadDeadline(deadline); err != nil {
+		return fmt.Errorf("set read deadline: %w", err)
 	}
+	if err := conn.SetWriteDeadline(deadline); err != nil {
+		return fmt.Errorf("set write deadline: %w", err)
+	}
+	return nil
+}
+
+// Connect opens a UDP connection to the server's ASE port.
+func (s *Server) Connect() (*net.UDPConn, error) {
+	udpAddr, err := net.ResolveUDPAddr("udp", s.Address+":"+strconv.Itoa(s.AsePort))
+	if err != nil {
+		return nil, fmt.Errorf("resolve UDPAddr failed: %w", err)
+	}
+
+	conn, err := net.DialUDP("udp", nil, udpAddr)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't establish udp connection: %w", err)
+	}
+
 	s.connection = conn
+	if err := s.refreshDeadline(); err != nil {
+		_ = conn.Close()
+		s.connection = nil
+		return nil, err
+	}
 
-	return
+	return conn, nil
 }
 
-// Reading data to buffer from socket
+// ReadSocketData sends the ASE status query and reads the response into a buffer.
 func (s *Server) ReadSocketData() (*[]byte, error) {
-	buf := make([]byte, 1024)
+	buf := make([]byte, aseResponseBufSz)
 
-	for {
-		_, err := s.connection.Write([]byte("s"))
-		if err != nil {
+	for attempt := 0; attempt < maxReadAttempts; attempt++ {
+		if err := s.refreshDeadline(); err != nil {
+			return nil, err
+		}
+
+		if _, err := s.connection.Write([]byte(aseQueryPayload)); err != nil {
 			return nil, err
 		}
 
 		readLen, _, err := s.connection.ReadFromUDP(buf)
 		if err != nil {
+			if isTimeoutError(err) {
+				return nil, fmt.Errorf("read ASE response timed out: %w", err)
+			}
 			return nil, err
 		}
 
 		if readLen > 0 {
-			break
+			return &buf, nil
 		}
 	}
 
-	return &buf, nil
+	return nil, errors.New("empty ASE response after retries")
 }
 
-// Interpreting data from the buffer and applying it to the server object
+func isTimeoutError(err error) bool {
+	if errors.Is(err, os.ErrDeadlineExceeded) {
+		return true
+	}
+
+	var netErr net.Error
+	return errors.As(err, &netErr) && netErr.Timeout()
+}
+
+// ReadRow parses an ASE response buffer and applies the fields to the server.
 func (s *Server) ReadRow(buf *[]byte) *Server {
 	buffer := bytes.NewBuffer(*buf)
 	params := [9]string{"Game", "Port", "Name", "Gamemode", "Map", "Version", "Somewhat", "Players", "Maxplayers"}
 
-	//reading begins from 4 byte
+	// reading begins from 4 byte
 	buffer.Next(4)
 	obj := reflect.Indirect(reflect.ValueOf(s))
 
@@ -113,10 +166,10 @@ func (s *Server) ReadRow(buf *[]byte) *Server {
 	return s
 }
 
-// Establishing connection, reading data and wraps up
-func (s *Server) UpdateOnce() (err error) {
+// UpdateOnce connects if needed, queries ASE once, parses the response, and closes the connection.
+func (s *Server) UpdateOnce() error {
 	if s.connection == nil {
-		if _, err = s.Connect(); err != nil {
+		if _, err := s.Connect(); err != nil {
 			return err
 		}
 	}
@@ -128,16 +181,14 @@ func (s *Server) UpdateOnce() (err error) {
 
 	buff, err := s.ReadSocketData()
 	if err != nil {
-		return
+		return err
 	}
 
 	s.ReadRow(buff)
-	return
+	return nil
 }
 
-// It returns string with join link,
-// which maybe you got used to see in ingame browser.
+// GetJoinLink returns the mtasa:// join link shown in the in-game browser.
 func (s *Server) GetJoinLink() string {
-	// return link to join mta sa server
 	return fmt.Sprintf("mtasa://%s:%d", s.Address, s.Port)
 }
